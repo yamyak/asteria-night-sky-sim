@@ -14,7 +14,7 @@ class StarChart:
 
         for row in csv_data:
             # star = Star(float(row['x']), float(row['y']), float(row['z']))
-            star = np.array([float(row['x']), float(row['y']), float(row['z'])])
+            star = np.matrix([[float(row['x'])], [float(row['y'])], [float(row['z'])]])
             self.star_list.append(star)
 
         csv_file.close()
@@ -22,7 +22,7 @@ class StarChart:
     def load_data(self, input_data):
         for element in input_data:
             # star = Star(element[0], element[1], element[2])
-            star = np.array([element[0], element[1], element[2]])
+            star = np.matrix([[element[0]], [element[1]], [element[2]]])
             self.star_list.append(star)
 
     def find_nearby_stars(self, center, node):
