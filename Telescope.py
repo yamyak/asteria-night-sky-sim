@@ -1,6 +1,7 @@
 import pygame
 import numpy as np
 import math
+import csv
 
 
 class Telescope:
@@ -28,7 +29,7 @@ class Telescope:
         self.plane_point = (np.asmatrix(plane_point)).T
 
         # convert the cartesian coordinates to polar coordinates
-        self.polar = self.convert_to_polar(plane_point)
+        self.polar = self.convert_to_polar(self.plane_point)
 
         self.rz = 0
         self.ry = 0
@@ -36,18 +37,7 @@ class Telescope:
         self.create_rotation_matrices()
 
         self.points = []
-
-    @staticmethod
-    def convert_to_polar(point):
-        """
-        Converts the cartesian coordinate into polar coordinates
-        :param point: matrix of cartesian coordinates x, y, and z
-        :return: polar coordinates theta and phi
-        """
-        theta = math.acos(point[2])
-        phi = math.atan2(point[1], point[0])
-
-        return theta, phi
+        self.star_list = []
 
     def create_rotation_matrices(self):
         """
@@ -65,10 +55,67 @@ class Telescope:
                             [0, 1, 0],
                             [-math.sin(theta), 0, math.cos(theta)]])
 
-    def calculate_view(self, star_list):
+    @staticmethod
+    def convert_to_polar(point):
+        """
+        Converts the cartesian coordinate into polar coordinates
+        :param point: matrix of cartesian coordinates x, y, and z
+        :return: polar coordinates theta and phi
+        """
+        n = np.linalg.norm(point)
+        norm = point / n
+
+        theta = math.acos(norm.item((2, 0)))
+        phi = math.atan2(norm.item((1, 0)), norm.item((0, 0)))
+
+        return theta, phi
+
+    def load_file(self, file_path):
+        """
+        Opens the star data file, reads in the data, and populates the star list
+        :param file_path: path to the star data csv
+        """
+        # open the csv file
+        csv_file = open(file_path, 'r')
+        csv_data = csv.DictReader(csv_file)
+
+        # create the star list
+        for row in csv_data:
+            star = np.matrix([[float(row['x'])], [float(row['y'])], [float(row['z'])]])
+            self.star_list.append(star)
+
+        # close the csv file
+        csv_file.close()
+
+    def load_data(self, input_data):
+        """
+        Populates the star list with input data
+        :param input_data: input star data
+        """
+        # create the star list
+        for element in input_data:
+            star = np.matrix([[element[0]], [element[1]], [element[2]]])
+            self.star_list.append(star)
+
+    def find_nearby_stars(self):
+        """
+        Find all stars that could potentially be visible in viewing plane
+        :return: list of stars that might be visible in viewing plane
+        """
+        step_size = math.pi/8
+
+        star_sub_list = []
+        for star in self.star_list:
+            star_theta, star_phi = self.convert_to_polar(star)
+
+            if math.fabs(star_phi - self.polar[1]) < step_size and math.fabs(star_theta - self.polar[0]) < step_size:
+                star_sub_list.append(star)
+
+        return star_sub_list
+
+    def calculate_view(self):
         """
         Calculate the 2D coordinates on the viewing plane based on the 3D coordinates
-        :param star_list: list of stars to be displayed
         :return: polar coordinates theta and phi
         """
         # create the normal for the viewing panel
@@ -76,8 +123,10 @@ class Telescope:
         normal = self.rz * normal
         normal = self.ry * normal
 
+        current_stars = self.find_nearby_stars()
+
         # iterate through list of stars
-        for star in star_list:
+        for star in current_stars:
             # apply the rotation matrices to the star coordinates
             star_2d = self.rz * star
             star_2d = self.ry * star_2d

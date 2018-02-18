@@ -1,8 +1,6 @@
-from StarChart import StarChart
 from Telescope import Telescope
 
 if __name__ == "__main__":
-    chart = StarChart()
     scope = Telescope(0.5, 0.5, 250, 250, (0, 0, 0), (1, 0, 0))
     data = [(100, 10, 10), (100, -20, 20), (100, -30, -30), (100, 40, -40)]
     #scope = Telescope(0.5, 0.5, 250, 250, (0, 0, 0), (-1, 0, 0))
@@ -15,6 +13,6 @@ if __name__ == "__main__":
     #data = [(10, 10, 100), (-20, 20, 100), (-30, -30, 100), (40, -40, 100)]
     #scope = Telescope(0.5, 0.5, 250, 250, (0, 0, 0), (0, 0, -1))
     #data = [(10, 10, -100), (-20, 20, -100), (-30, -30, -100), (40, -40, -100)]
-    chart.load_data(data)
-    scope.calculate_view(chart.find_nearby_stars((0, 0, 0), (0, 0, 0)))
+    scope.load_data(data)
+    scope.calculate_view()
     scope.update_view()
