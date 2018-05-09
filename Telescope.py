@@ -1,32 +1,26 @@
 import pygame
 import numpy as np
 import math
-import csv
 
 
 class Telescope:
 
-    def __init__(self, width, height, screen_w, screen_h, focus_point, plane_point):
+    def __init__(self, compass):
         """
         Constructor
-        :param width: 1/2 width of the camera plane
-        :param height: 1/2 height of the camera plane
-        :param screen_w: 1/2 width of the camera plane in pixels
-        :param screen_h: 1/2 height of the camera plane in pixels
-        :param focus_point: location that subject eyes are
-        :param plane_point: center point of the camera plane
+        :param compass: compass object containing initialization data
         """
-        self.width = width
-        self.height = height
-        self.screen_w = screen_w
-        self.screen_h = screen_h
+        self.width = compass.width
+        self.height = compass.height
+        self.screen_w = compass.screen_w
+        self.screen_h = compass.screen_h
 
         # initialize pygame screen
         pygame.init()
-        self.screen = pygame.display.set_mode((screen_w*2, screen_h*2))
+        self.screen = pygame.display.set_mode((self.screen_w*2, self.screen_h*2))
 
-        self.focus_point = (np.asmatrix(focus_point)).T
-        self.plane_point = (np.asmatrix(plane_point)).T
+        self.focus_point = (np.asmatrix(compass.focus_point)).T
+        self.plane_point = (np.asmatrix(compass.plane_point)).T
 
         # convert the cartesian coordinates to polar coordinates
         self.polar = self.convert_to_polar(self.plane_point)
@@ -37,7 +31,11 @@ class Telescope:
         self.create_rotation_matrices()
 
         self.points = []
-        self.star_list = []
+
+        self.chart = None
+
+    def load_chart(self, chart):
+        self.chart = chart
 
     def create_rotation_matrices(self):
         """
@@ -70,33 +68,6 @@ class Telescope:
 
         return theta, phi
 
-    def load_file(self, file_path):
-        """
-        Opens the star data file, reads in the data, and populates the star list
-        :param file_path: path to the star data csv
-        """
-        # open the csv file
-        csv_file = open(file_path, 'r')
-        csv_data = csv.DictReader(csv_file)
-
-        # create the star list
-        for row in csv_data:
-            star = np.matrix([[float(row['x'])], [float(row['y'])], [float(row['z'])]])
-            self.star_list.append(star)
-
-        # close the csv file
-        csv_file.close()
-
-    def load_data(self, input_data):
-        """
-        Populates the star list with input data
-        :param input_data: input star data
-        """
-        # create the star list
-        for element in input_data:
-            star = np.matrix([[element[0]], [element[1]], [element[2]]])
-            self.star_list.append(star)
-
     def find_nearby_stars(self):
         """
         Find all stars that could potentially be visible in viewing plane
@@ -105,7 +76,9 @@ class Telescope:
         step_size = math.pi/8
 
         star_sub_list = []
-        for star in self.star_list:
+
+        star_list = self.chart.get_data()
+        for star in star_list:
             star_theta, star_phi = self.convert_to_polar(star)
 
             if math.fabs(star_phi - self.polar[1]) < step_size and math.fabs(star_theta - self.polar[0]) < step_size:
