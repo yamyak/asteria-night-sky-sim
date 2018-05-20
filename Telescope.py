@@ -110,7 +110,7 @@ class Telescope:
             # if 2D star is within camera plane borders, add to list of stars to draw
             if (0 - self.width) < star_2d.item((1, 0)) < self.width and (0 - self.height) < star_2d.item((2, 0)) < self.height:
                 # flip the screen over the vertical axis
-                self.points.append((-star_2d.item((1, 0)), star_2d.item((2, 0))))
+                self.points.append((star_2d.item((1, 0)), star_2d.item((2, 0))))
 
     def find_intersection(self, star, normal):
         """
